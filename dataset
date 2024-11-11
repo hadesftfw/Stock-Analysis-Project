@@ -1,0 +1,57 @@
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+import yfinance as yf
+from datetime import datetime, timedelta
+import seaborn as sns
+
+end_date = datetime.today()
+stocks = ['^NSEI', '^NSEMDCP50', '^NSEBANK', '^CNXFMCG', 'GOLDBEES.NS']
+
+df = yf.download(stocks, start = end_date - timedelta(5*365), end = end_date)
+df = df.dropna()
+
+df = pd.DataFrame(df[['Close']])
+
+daily_returns = df['Close'].pct_change()
+
+for stock in stocks:
+    df[f'Daily Returns {stock}'] = df['Close'][stock].pct_change()*100
+
+for stock in stocks:
+    df[f'10 Day SMA {stock}'] = df['Close'][stock].rolling(window=10).mean()
+
+for stock in stocks:
+    df[f'30 Day SMA {stock}'] = df['Close'][stock].rolling(window=30).mean()
+
+correlation_matrix = daily_returns.corr()
+
+plt.figure(figsize=(10,6))
+sns.heatmap(correlation_matrix, vmin=-1, vmax=+1)
+plt.title('Correlation Matrix')
+plt.show()
+
+plt.figure(figsize=(10,6))
+for stock in stocks:
+    plt.plot(df['Close'][stock], label=stock)
+plt.xlabel('Date')
+plt.ylabel('Price')
+plt.title('Stock Price Over Time')
+plt.legend()
+plt.show()
+
+plt.figure(figsize=(10,6))
+plt.plot(df[f'Daily Returns {stocks[0]}'])
+plt.xlabel('Date')
+plt.ylabel('Returns')
+plt.title(f'{stocks[0]} Returns over time')
+plt.show()
+
+plt.figure (figsize=(10,6))
+plt.plot(df['Close'][stocks[0]])
+plt.plot(df[f'10 Day SMA {stocks[0]}'])
+plt.plot(df[f'30 Day SMA {stocks[0]}'])
+plt.xlabel('Date')
+plt.ylabel('Price')
+plt.title(f'{stocks[0]} price variation with moving averages')
+plt.show()
